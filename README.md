@@ -23,7 +23,7 @@
 
 本次比赛我们是基于百度的BMN模型进行修改的，BMN模型是一个运行高效、性能优秀的，且由纯卷积组成的模型。它在前人的工作上做了许多改进，提名特征提取以及置信度评估的过程是并行的，使其效率得到大大的提升。此外，还在语义丰富性上做了很大的改进。但是BMN模型其实是非常简单的，在网络设计和优化方面还存在着不小的提高空间。由此，我们从网络设计方面着手，对基础模块部分进行了优化，将其原有的纯卷积层替换为可以注意更多信息的Transformer架构，实现更加丰富的时序语义信息融合。
 
-<img src="./pictures/1.png" style="zoom:60%;" />
+<img src="./pictures/1.png" style="zoom:20%;" width="500" height="300"/>
 
 
 
@@ -77,32 +77,4 @@ encoder模块作为主干网络处理输入的特征序列，用于扩大感受�
 11. [时序动作检测模型 — MMAction2 0.21.0 文档](https://mmaction2.readthedocs.io/zh_CN/latest/localization_models.html)
 12. [API 文档-API文档-PaddlePaddle深度学习平台](https://www.paddlepaddle.org.cn/documentation/docs/zh/api/index_cn.html)
 
-
-$$
-
-$$
-
-$$
-
-$$
-
-$$
-
-$$
-
-$$
-
-$$
-
-$$
-
-$$
-
-$$
-
-$$
-
-$$
-
-$$
 
