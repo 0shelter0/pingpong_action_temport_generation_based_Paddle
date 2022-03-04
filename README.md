@@ -21,7 +21,7 @@
 
 ## 思路介绍+个人方案亮点
 
-本次比赛我们是基于百度的BMN模型进行修改的，BMN模型是一个运行高效、性能优秀的，且由纯卷积组成的模型。它在前人的工作上做了许多改进，提名特征提取以及置信度评估的过程是并行的，使其效率得到大大的提升。此外，还在语义丰富性上做了很大的改进。但是BMN模型其实是非常简单的，在网络设计和优化方面还存在着不小的提高空间。由此，我们从网络设计方面着手，对基础模块部分进行了优化，将其原有的纯卷积层替换为可以注意更多信息的Transformer架构，实现更加丰富的时序语义信息融合。
+本次比赛我们是基于百度的BMN模型进行修改的，BMN模型是一个运行高效、性能优秀的，且由纯卷积组成的模型。它在前人的工作上做了许多改进，提名特征提取以及置信度评估的过程是并行的，使其效率得到大大的提升。此外，还在语义丰富性上做了很大的改进。但是BMN模型其实是非常简单的，在网络设计和优化方面还存在着不小的提高空间。由此，我们从网络设计方面着手，对基础模块部分进行了优化，将其原有的纯卷积层替换为可以注意更多信息的Transformer架构，实现更加丰富的时序语义信息融合。具体来说就是将BMN模型中的Base Moudle 用transformer中的Encoder结构来替代，后面的结构依然沿用BMN。实验结果表明，该方案能够优于基线模型，达到比较好的性能。
 
 <img src="./pictures/1.png" style="zoom:20%;" width="500" height="300"/>
 
@@ -29,7 +29,7 @@
 
 ## 具体方案
 
-模型主要由编码器、时序评估模块、提议评估模块三部分组成。我们首先基础模块对原始的特征进行处理，然后用时序评估模块去定位时序动作片段的边界的概率序列，即开始边界和结束边界概率，最后所有可能的提议生成置信度图。
+模型主要由编码器、时序评估模块、提议评估模块三部分组成。我们首先用Encoder对原始的特征进行处理，然后用时序评估模块去定位时序动作片段的边界的概率序列，即开始边界和结束边界概率，最后将所有可能的提议生成置信度图。具体来说，encoder的过程如下图所示，他将比赛提供的时序特征序列当作输入，首先经过位置编码，然后通过线性投影生成$Q$,$K$,$V$，再进行scaled dot product 和 weighted sum，为了训练的稳定再加入残差连接，紧接着就是LayerNorm，后面一部分就是FFN了。该模块，输入和输出的特征维度将会不变，旨在更加充分的融合时序上下文信息。下面将会说到该module具体的参数设置。
 
 ![](README.assets/encoder.svg)
 
@@ -52,11 +52,13 @@ encoder模块作为主干网络处理输入的特征序列，用于扩大感受�
 
 负样本然后计算weighted binary logistic regression loss，因为该loss比较小，所以乘以weight=10；第二块reg_loss，选取gt_iou_map大于0.7是正样本，小于0.3负样本，计算weighted mse loss，最终loss是这几类loss相加
 
+##  实验设置
 
+我们采用ActivityNet cuhk100数据的处理方式，即将所有的视频长度设置成100帧，实验环境为unbuntu Server20.04, 单个GeForce RTX3090, Cuda11.2+paddle2.2。在实验中将每一个视频当作一个sample，单卡的batch_size=16，我们采用optimizer.lr.StepDecay学习率调整策略，初始值设为0.001，每隔15个epoch乘上衰减因子0.1，训练的epochs=30，使用的optimizer是Adamx。对于Encoder模块，注意力层数为1，注意力头个数为4，encoder的维度大小d_model=512，dropout丢失概率为0.1。 有时候训练不太稳定，可能是数据集的规模太小造成的。线性层的权重初始化策略是kaiming_normal。
 
 ## 总结+改进完善方向
 
-本方案将基础模块换成了Transformer的Encoder模块（即BERT），因为基础模块是使用的一维卷积，用于扩大感受野，其用一维卷积的感受野有限，无法考虑整个序列的信息。为此，我们选用了Transformer的Encoder部分来关注更多的信息，以此取代基础模块。
+本方案将BMN原始方案中基础模块(Base Module)替换成了Transformer的Encoder模块，因为基础模块是使用的一维卷积来进行特征的时序融合，其一维卷积的感受野有限，无法考虑整个序列的信息。为此，我们选用了Transformer的Encoder部分来关注更多的信息，以此取代基础模块，更好的增加模型时序表达能力。
 
 ## 飞将使用体验以及学习飞桨的建议
 
@@ -78,5 +80,4 @@ encoder模块作为主干网络处理输入的特征序列，用于扩大感受�
 10. [P-GCN: Graph Convolutional Networks for Temporal Action Localization](https://arxiv.org/abs/1911.11462)
 11. [时序动作检测模型 — MMAction2 0.21.0 文档](https://mmaction2.readthedocs.io/zh_CN/latest/localization_models.html)
 12. [API 文档-API文档-PaddlePaddle深度学习平台](https://www.paddlepaddle.org.cn/documentation/docs/zh/api/index_cn.html)
-
 
