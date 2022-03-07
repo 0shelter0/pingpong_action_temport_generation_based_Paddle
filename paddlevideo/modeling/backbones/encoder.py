@@ -35,18 +35,18 @@ class MultiHeadAttention(nn.Layer):
         # nn.convND weight should init by kaiming_normal(i.e. default mananer), 
         # and bias should init by k=1/math.sqrt(fan)~U(-k, k), respectively
         self.W_Q = nn.Linear(d_model, d_k * n_heads,
-                             weight_attr=nn.initializer.KaimingNormal(),
+                             weight_attr=nn.initializer.KaimingUniform(),
                              bias_attr=False)
         self.W_K = nn.Linear(d_model, d_k * n_heads,
-                             weight_attr=nn.initializer.KaimingNormal(),
+                             weight_attr=nn.initializer.KaimingUniform(),
                              bias_attr=False)
         self.W_V = nn.Linear(d_model, d_v * n_heads,
-                             weight_attr=nn.initializer.KaimingNormal(),
+                             weight_attr=nn.initializer.KaimingUniform(),
                              bias_attr=False)
 
         # optional
         self.linear = nn.Linear(n_heads * d_v, d_model,
-                                weight_attr=nn.initializer.KaimingNormal(),
+                                weight_attr=nn.initializer.KaimingUniform(),
                                 bias_attr=None)  # for output projection
         self.layer_norm = nn.LayerNorm(normalized_shape=d_model)
         self.dropout1 = nn.Dropout(p=dropout)
